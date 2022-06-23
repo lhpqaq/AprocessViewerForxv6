@@ -1,5 +1,5 @@
-platform	:= k210
-#platform	:= qemu
+#platform	:= k210
+platform	:= qemu
 # mode := debug
 mode := release
 K=kernel
@@ -205,6 +205,7 @@ UPROGS=\
 	$U/_strace\
 	$U/_mv\
 	$U/_getpid\
+	$U/_getppid\
 
 	# $U/_forktest\
 	# $U/_ln\
