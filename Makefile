@@ -206,6 +206,7 @@ UPROGS=\
 	$U/_mv\
 	$U/_getpid\
 	$U/_getppid\
+	$U/_getmem\
 
 	# $U/_forktest\
 	# $U/_ln\
