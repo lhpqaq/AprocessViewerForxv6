@@ -41,6 +41,13 @@ extern struct cpu cpus[NCPU];
 
 enum procstate { UNUSED, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 
+struct tms {
+    uint64 utime; // user time (in seconds)
+    uint64 stime; // system time
+    uint64 cutime; // user time of children
+    uint64 cstime; // system time of children
+};
+
 // Per-process state
 struct proc {
   struct spinlock lock;
@@ -64,6 +71,10 @@ struct proc {
   struct dirent *cwd;          // Current directory
   char name[16];               // Process name (debugging)
   int tmask;                    // trace mask
+
+  struct tms times;
+  uint64 u2stime;
+  uint64 s2utime;
 };
 
 void            reg_info(void);

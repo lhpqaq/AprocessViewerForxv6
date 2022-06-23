@@ -13,6 +13,7 @@
 #include "include/file.h"
 #include "include/trap.h"
 #include "include/vm.h"
+#include "include/timer.h"
 
 
 struct cpu cpus[NCPU];
@@ -68,6 +69,17 @@ procinit(void)
       // // printf("[procinit]kvmmap va %p to pa %p\n", va, (uint64)pa);
       // kvmmap(va, (uint64)pa, PGSIZE, PTE_R | PTE_W);
       // p->kstack = va;
+
+      acquire(&p->lock);
+
+      p->times.utime=0;
+      p->times.stime=0;
+      p->times.cutime=0;
+      p->times.cstime=0;
+
+      p->u2stime=retime();
+
+      release(&p->lock);
   }
   //kvminithart();
 
@@ -594,9 +606,14 @@ sched(void)
   if(intr_get())
     panic("sched interruptible");
 
+  // 离开内核态
+  p->times.stime += (retime() - p->u2stime);
+
   intena = mycpu()->intena;
   swtch(&p->context, &mycpu()->context);
   mycpu()->intena = intena;
+
+  p->s2utime = retime();
 }
 
 // Give up the CPU for one scheduling round.

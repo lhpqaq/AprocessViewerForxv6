@@ -10,6 +10,8 @@
 #include "include/printf.h"
 #include "include/proc.h"
 
+#define WHATIME 0
+
 struct spinlock tickslock;
 uint ticks;
 
@@ -34,7 +36,35 @@ set_next_timeout() {
 void timer_tick() {
     acquire(&tickslock);
     ticks++;
+/*    if(ticks%10==0)
+    {
+        printf("ticks+=10\n");
+    }*/
+/*    if(ticks%10==0)
+    {
+        printf("ticks=%d\n",ticks);
+        uint64 rtime=r_time();
+        printf("rtime=%ld\n",rtime);
+    }*/
     wakeup(&ticks);
     release(&tickslock);
     set_next_timeout();
+}
+
+uint64 retime()
+{
+    uint64 now;
+
+    if(WHATIME)
+    {
+        now = r_time();
+    }
+    else
+    {
+        acquire(&tickslock);
+        now = ticks;
+        release(&tickslock);
+    }
+
+    return now;
 }

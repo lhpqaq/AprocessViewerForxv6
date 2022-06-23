@@ -58,9 +58,18 @@ usertrap(void)
 
   // send interrupts and exceptions to kerneltrap(),
   // since we're now in the kernel.
+  //printf("switch to kernal...\n");
   w_stvec((uint64)kernelvec);
 
+  uint64 nowtime = retime();
   struct proc *p = myproc();
+  // 进入内核态的时间
+  p->u2stime = nowtime;
+
+  // 当前时间减去上一次进入用户态的时间
+  p->times.utime += (nowtime - p->s2utime);
+  //printf("switch to kernal ok\n");
+
   
   // save user program counter.
   p->trapframe->epc = r_sepc();
@@ -93,8 +102,9 @@ usertrap(void)
   // give up the CPU if this is a timer interrupt.
   if(which_dev == 2)
     yield();
-
+  //printf("switch to user...\n");
   usertrapret();
+  //printf("switch to user ok\n");
 }
 
 //
