@@ -52,7 +52,7 @@ struct trapframe {
   /* 272 */ uint64 t5;
   /* 280 */ uint64 t6;
 };
-
+void            usertrap(void);
 void            trapinithart(void);
 void            usertrapret(void);
 void            trapframedump(struct trapframe *tf);

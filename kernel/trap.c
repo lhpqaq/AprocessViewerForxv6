@@ -65,9 +65,19 @@ usertrap(void)
   struct proc *p = myproc();
   // 进入内核态的时间
   p->u2stime = nowtime;
-
+  //p->us2ustime = nowtime;
+  //printf("p:%d  switch to kernal...\n",p->pid);
   // 当前时间减去上一次进入用户态的时间
+/*  if(p->curspace==1)
+  {
+    p->times.utime += (nowtime - p->s2utime);
+  }
+  else
+  {
+    p->times.utime += (nowtime - p->us2ustime);
+  }*/
   p->times.utime += (nowtime - p->s2utime);
+  //p->curspace=2;
   //printf("switch to kernal ok\n");
 
   

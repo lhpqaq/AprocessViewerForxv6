@@ -44,3 +44,4 @@ entry("rename");
 
 entry("getppid");
 entry("getmem");
+entry("times");

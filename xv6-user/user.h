@@ -5,7 +5,12 @@
 struct stat;
 struct rtcdate;
 struct sysinfo;
-
+struct tms {
+    uint64 utime; // user time (in seconds)
+    uint64 stime; // system time
+    uint64 cutime; // user time of children
+    uint64 cstime; // system time of children
+};
 // system calls
 int fork(void);
 int exit(int) __attribute__((noreturn));
@@ -54,3 +59,4 @@ void *memcpy(void *, const void *, uint);
 
 int getppid(void);
 int getmem(void);
+long times(struct tms*);

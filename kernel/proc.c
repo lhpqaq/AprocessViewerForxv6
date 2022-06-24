@@ -78,7 +78,9 @@ procinit(void)
       p->times.cstime=0;
 
       p->u2stime=retime();
-
+      p->s2utime=retime();
+      //p->us2ustime=retime();
+      //p->curspace=1;
       release(&p->lock);
   }
   //kvminithart();
@@ -515,6 +517,9 @@ wait(uint64 addr)
             release(&p->lock);
             return -1;
           }
+          p->times.cstime += (np->times.stime + np->times.cstime);
+          p->times.cutime += (np->times.utime + np->times.cutime);
+
           freeproc(np);
           release(&np->lock);
           release(&p->lock);
@@ -608,12 +613,21 @@ sched(void)
 
   // 离开内核态
   p->times.stime += (retime() - p->u2stime);
-
+/*  if(p->curspace==2)
+  {
+    p->times.stime += (retime() - p->u2stime);
+  }
+  else
+  {
+    p->times.stime += (retime() - p->us2ustime);
+  }*/
   intena = mycpu()->intena;
   swtch(&p->context, &mycpu()->context);
   mycpu()->intena = intena;
-
+  //printf("p:%d  switch to user...\n",p->pid);
   p->s2utime = retime();
+/*  p->us2ustime = retime();
+  p->curspace=1;*/
 }
 
 // Give up the CPU for one scheduling round.

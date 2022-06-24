@@ -2,7 +2,6 @@
 #include "kernel/include/stat.h"
 #include "xv6-user/user.h"
 
-
 int test_getppid()
 {
     //TEST_START(__func__);
@@ -13,9 +12,18 @@ int test_getppid()
     return 0;
 }
 
+void test_times()
+{
+    struct tms t;
+    long tt=times(&t);
+    printf("times:%l %l %l %l \n",t.utime,t.stime,t.cutime,t.cstime);
+    printf("return:%l\n",tt);
+}
+
 int main(void) {
     printf("hello\n");
 	test_getppid();
+    test_times();
 	exit(0);
     return 0;
 }

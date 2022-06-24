@@ -75,6 +75,8 @@ struct proc {
   struct tms times;
   uint64 u2stime;
   uint64 s2utime;
+/*  int curspace;           //1 用户态，2内核态
+  uint64 us2ustime;*/
 };
 
 void            reg_info(void);

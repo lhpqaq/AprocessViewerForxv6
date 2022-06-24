@@ -10,6 +10,7 @@
 #include "include/kalloc.h"
 #include "include/string.h"
 #include "include/printf.h"
+#include "include/vm.h"
 
 extern int exec(char *path, char **argv);
 
@@ -165,4 +166,18 @@ sys_getppid(void)
 uint64
 sys_getmem(void){
   return myproc()->sz/1024;
+}
+
+uint64 sys_times(void)
+{
+    uint64 tms;
+    if (argaddr(0, &tms) < 0) {
+        return -1;
+    }
+
+    struct proc *p = myproc();
+    if (copyout2(tms, (char*)&(p->times), sizeof(p->times)) < 0) {
+        return -1;
+    }
+    return retime();
 }
