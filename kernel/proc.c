@@ -611,7 +611,7 @@ sched(void)
   if(intr_get())
     panic("sched interruptible");
 
-  // 离开内核态
+  // 
   p->times.stime += (retime() - p->u2stime);
 /*  if(p->curspace==2)
   {
@@ -625,7 +625,7 @@ sched(void)
   swtch(&p->context, &mycpu()->context);
   mycpu()->intena = intena;
   //printf("p:%d  switch to user...\n",p->pid);
-  p->s2utime = retime();
+  p->u2stime = retime();
 /*  p->us2ustime = retime();
   p->curspace=1;*/
 }
@@ -662,6 +662,7 @@ forkret(void)
     myproc()->cwd = ename("/");
   }
 
+  myproc()->u2stime = retime();
   usertrapret();
 }
 

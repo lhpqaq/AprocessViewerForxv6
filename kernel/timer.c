@@ -10,7 +10,7 @@
 #include "include/printf.h"
 #include "include/proc.h"
 
-#define WHATIME 0
+#define WHATIME 1
 
 struct spinlock tickslock;
 uint ticks;

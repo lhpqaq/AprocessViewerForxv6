@@ -64,7 +64,7 @@ usertrap(void)
   uint64 nowtime = retime();
   struct proc *p = myproc();
   // 进入内核态的时间
-  p->u2stime = nowtime;
+  //p->u2stime = nowtime;
   //p->us2ustime = nowtime;
   //printf("p:%d  switch to kernal...\n",p->pid);
   // 当前时间减去上一次进入用户态的时间
@@ -76,6 +76,7 @@ usertrap(void)
   {
     p->times.utime += (nowtime - p->us2ustime);
   }*/
+  p->u2stime = nowtime;
   p->times.utime += (nowtime - p->s2utime);
   //p->curspace=2;
   //printf("switch to kernal ok\n");
@@ -129,7 +130,9 @@ usertrapret(void)
   // kerneltrap() to usertrap(), so turn off interrupts until
   // we're back in user space, where usertrap() is correct.
   intr_off();
-
+  uint64 nowtime = retime();
+  p->s2utime = nowtime;
+  p->times.stime += (nowtime - p->u2stime);
   // send syscalls, interrupts, and exceptions to trampoline.S
   w_stvec(TRAMPOLINE + (uservec - trampoline));
 
