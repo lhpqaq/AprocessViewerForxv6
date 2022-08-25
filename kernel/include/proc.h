@@ -77,6 +77,12 @@ struct proc {
   uint64 s2utime;
 /*  int curspace;           //1 用户态，2内核态
   uint64 us2ustime;*/
+  
+  int signal;   //信号类型
+  uint64 alarm_flag;    //当前进程是否调用了alarm的标志
+  uint64 alarm_tick;    //当前alarm信号标记后运行了多少个tick
+  uint64 alarm_para;    //alarm函数参数，表示alarm信号需要运行多少个tick后kill
+
 };
 
 void            reg_info(void);

@@ -11,6 +11,7 @@
 #include "include/vm.h"
 #include "include/string.h"
 #include "include/printf.h"
+#include "include/signal.h"
 
 // Fetch the uint64 at addr from the current process.
 int
@@ -120,6 +121,7 @@ extern uint64 sys_rename(void);
 extern uint64 sys_getppid(void);
 extern uint64 sys_getmem(void);
 extern uint64 sys_times(void);
+extern uint64 sys_alarm(void);
 
 static uint64 (*syscalls[])(void) = {
   [SYS_fork]        sys_fork,
@@ -152,6 +154,7 @@ static uint64 (*syscalls[])(void) = {
   [SYS_getppid]     sys_getppid,
   [SYS_getmem]      sys_getmem,
   [SYS_times]       sys_times,
+  [SYS_alarm]       sys_alarm,
 };
 
 static char *sysnames[] = {
@@ -185,6 +188,7 @@ static char *sysnames[] = {
   [SYS_getppid]      "getppid",
   [SYS_getmem]       "getmem",
   [SYS_times]        "times",
+  [SYS_alarm]        "alarm",
 };
 
 void

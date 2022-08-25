@@ -38,6 +38,7 @@ OBJS += \
   $K/disk.o \
   $K/fat32.o \
   $K/plic.o \
+  $K/signal.o\
   $K/console.o
 
 ifeq ($(platform), k210)
@@ -207,6 +208,7 @@ UPROGS=\
 	$U/_getpid\
 	$U/_getppid\
 	$U/_getmem\
+	$U/_alarm\
 
 	# $U/_forktest\
 	# $U/_ln\

@@ -41,6 +41,14 @@ set_next_timeout() {
 void timer_tick() {
     acquire(&tickslock);
     ticks++;
+    if(myproc()){
+        if(myproc()->alarm_flag){
+            if(myproc()->alarm_tick==myproc()->alarm_para){
+                kill(myproc()->pid);
+            }
+            myproc()->alarm_tick++;
+        }        
+    }
     wakeup(&ticks);
     release(&tickslock);
     set_next_timeout();

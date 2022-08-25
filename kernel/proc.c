@@ -76,6 +76,8 @@ procinit(void)
       p->times.stime=0;
       p->times.cutime=0;
       p->times.cstime=0;
+      p->alarm_flag=0;
+      p->alarm_tick=0;
 
       p->u2stime=retime();
       p->s2utime=retime();

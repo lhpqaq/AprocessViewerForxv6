@@ -11,6 +11,7 @@
 #include "include/string.h"
 #include "include/printf.h"
 #include "include/vm.h"
+#include "include/signal.h"
 
 extern int exec(char *path, char **argv);
 
@@ -67,8 +68,7 @@ sys_exit(void)
 }
 
 uint64
-sys_getpid(void)
-{
+sys_getpid(void){
   return myproc()->pid;
 }
 
@@ -158,8 +158,7 @@ sys_trace(void)
 
 
 uint64
-sys_getppid(void)
-{
+sys_getppid(void){
   return myproc()->parent->pid;
 }
 
@@ -180,4 +179,19 @@ uint64 sys_times(void)
         return -1;
     }
     return retime();
+}
+
+uint64 
+sys_alarm(void){
+  int second;
+  if(argint(0, &second) < 0) {
+    return -1;
+  }
+
+  myproc()->signal=SIGALARM;
+
+  myproc()->alarm_flag=1;
+  myproc()->alarm_para=second*5;
+  myproc()->alarm_tick=0;
+  return 0;
 }
