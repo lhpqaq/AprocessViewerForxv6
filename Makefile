@@ -209,6 +209,7 @@ UPROGS=\
 	$U/_getppid\
 	$U/_getmem\
 	$U/_alarm\
+	$U/_pause\
 
 	# $U/_forktest\
 	# $U/_ln\

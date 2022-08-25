@@ -195,3 +195,13 @@ sys_alarm(void){
   myproc()->alarm_tick=0;
   return 0;
 }
+
+uint64 
+sys_pause(void){
+  acquire(&tickslock);
+    while(myproc()->killed == 0){
+      sleep(&ticks, &tickslock);
+    }
+  release(&tickslock);
+  return 0;
+}
