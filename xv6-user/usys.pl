@@ -47,3 +47,4 @@ entry("getmem");
 entry("times");
 entry("alarm");
 entry("pause");
+entry("signal");

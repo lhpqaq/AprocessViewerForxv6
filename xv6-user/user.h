@@ -1,6 +1,7 @@
 #include "kernel/include/types.h"
 #include "kernel/include/stat.h"
 #include "kernel/include/fcntl.h"
+#include "kernel/include/signal.h"
 
 struct stat;
 struct rtcdate;
@@ -62,3 +63,4 @@ int getmem(void);
 long times(struct tms*);
 int alarm(int second);
 void pause();
+void signal(int sig, int sigaction);

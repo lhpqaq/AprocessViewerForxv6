@@ -43,11 +43,13 @@ void timer_tick() {
     ticks++;
     if(myproc()){
         if(myproc()->alarm_flag){
+            printf("*******************\n");
+            printf("%d %d\n", myproc()->alarm_tick, myproc()->alarm_para);
             if(myproc()->alarm_tick==myproc()->alarm_para){
                 kill(myproc()->pid);
             }
             myproc()->alarm_tick++;
-        }        
+        } 
     }
     wakeup(&ticks);
     release(&tickslock);

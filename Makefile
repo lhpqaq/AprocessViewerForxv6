@@ -210,6 +210,7 @@ UPROGS=\
 	$U/_getmem\
 	$U/_alarm\
 	$U/_pause\
+	$U/_signal_1\
 
 	# $U/_forktest\
 	# $U/_ln\

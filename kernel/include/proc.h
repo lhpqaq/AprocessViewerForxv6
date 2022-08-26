@@ -8,6 +8,7 @@
 #include "file.h"
 #include "fat32.h"
 #include "trap.h"
+#include "signal.h"
 
 // Saved registers for kernel context switches.
 struct context {
@@ -82,6 +83,8 @@ struct proc {
   uint64 alarm_flag;    //当前进程是否调用了alarm的标志
   uint64 alarm_tick;    //当前alarm信号标记后运行了多少个tick
   uint64 alarm_para;    //alarm函数参数，表示alarm信号需要运行多少个tick后kill
+
+  int signal_action;    //signal函数的第二个参数
 
 };
 

@@ -205,3 +205,18 @@ sys_pause(void){
   release(&tickslock);
   return 0;
 }
+
+uint64 
+sys_signal(void){
+  int sigType;
+  int sigaction;
+  if(argint(0, &sigType) < 0) {
+    return -1;
+  }
+  if(argint(0, &sigaction) < 0){
+    return -1;
+  }
+  myproc()->signal_action=sigaction;
+  myproc()->signal=sigType;
+  return 0;
+}
