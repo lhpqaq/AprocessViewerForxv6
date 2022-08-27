@@ -107,8 +107,12 @@ usertrap(void)
     p->killed = 1;
   }
 
-  if(p->killed)
-    exit(-1);
+  if (p->killed) {
+    if (SIGTERM == p->killed){
+      exit(-1);
+    }
+    signal_handle();
+  }
 
   // give up the CPU if this is a timer interrupt.
   if(which_dev == 2)

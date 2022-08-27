@@ -83,6 +83,11 @@ procinit(void)
       p->s2utime=retime();
       //p->us2ustime=retime();
       //p->curspace=1;
+
+      p->killed=0;
+      p->sigaction.sig_action=SIG_DFL;
+      p->sigaction.sig_flags=0;
+
       release(&p->lock);
   }
   //kvminithart();
@@ -733,15 +738,16 @@ wakeup1(struct proc *p)
 // Kill the process with the given pid.
 // The victim won't exit until it tries to return
 // to user space (see usertrap() in trap.c).
+
 int
-kill(int pid)
+kill(int pid, int sig)
 {
   struct proc *p;
 
   for(p = proc; p < &proc[NPROC]; p++){
     acquire(&p->lock);
     if(p->pid == pid){
-      p->killed = 1;
+      p->killed = sig;
       if(p->state == SLEEPING){
         // Wake process from sleep().
         p->state = RUNNABLE;
@@ -753,6 +759,7 @@ kill(int pid)
   }
   return -1;
 }
+
 
 // Copy to either a user address, or kernel address,
 // depending on usr_dst.

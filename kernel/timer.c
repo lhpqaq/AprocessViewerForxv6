@@ -9,6 +9,9 @@
 #include "include/timer.h"
 #include "include/printf.h"
 #include "include/proc.h"
+#include "include/signal.h"
+
+extern struct proc proc[NPROC];
 
 #define WHATIME 1
 
@@ -41,15 +44,20 @@ set_next_timeout() {
 void timer_tick() {
     acquire(&tickslock);
     ticks++;
-    if(myproc()){
-        if(myproc()->alarm_flag){
-            printf("*******************\n");
-            printf("%d %d\n", myproc()->alarm_tick, myproc()->alarm_para);
-            if(myproc()->alarm_tick==myproc()->alarm_para){
-                kill(myproc()->pid);
+    struct proc *p;
+    for(p = proc; p < &proc[NPROC]; p++) {
+      if(p->alarm_tick>0) {
+        p->alarm_tick--;
+       // printf("alarm_timer_tick减减\n");
+        if(p->alarm_tick==0) {
+         //   printf("alarm_timer_tick time out    proc pid:%d\n",p->pid);
+            if(p->sigaction.sig_flags==0){
+                kill(p->pid, SIGALARM);
+            } else {
+                kill(p->pid, p->sigaction.sig_type);
             }
-            myproc()->alarm_tick++;
-        } 
+        }
+      }
     }
     wakeup(&ticks);
     release(&tickslock);

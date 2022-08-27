@@ -136,6 +136,8 @@ consoleintr(int c)
   case C('P'):  // Print process list.
     procdump();
     break;
+  case C('C'):
+    kill(myproc()->pid, SIGINT);
   case C('U'):  // Kill line.
     while(cons.e != cons.w &&
           cons.buf[(cons.e-1) % INPUT_BUF] != '\n'){

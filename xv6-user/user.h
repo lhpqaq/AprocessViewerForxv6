@@ -63,4 +63,4 @@ int getmem(void);
 long times(struct tms*);
 int alarm(int second);
 void pause();
-void signal(int sig, int sigaction);
+void (*signal(int sig, void (*func)(int)))(int);

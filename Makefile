@@ -211,6 +211,7 @@ UPROGS=\
 	$U/_alarm\
 	$U/_pause\
 	$U/_signal_1\
+	$U/_signal_2\
 
 	# $U/_forktest\
 	# $U/_ln\

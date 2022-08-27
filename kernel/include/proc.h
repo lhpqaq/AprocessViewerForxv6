@@ -84,7 +84,7 @@ struct proc {
   uint64 alarm_tick;    //当前alarm信号标记后运行了多少个tick
   uint64 alarm_para;    //alarm函数参数，表示alarm信号需要运行多少个tick后kill
 
-  int signal_action;    //signal函数的第二个参数
+  struct sigaction sigaction;         //信号类型
 
 };
 
@@ -95,7 +95,7 @@ int             fork(void);
 int             growproc(int);
 pagetable_t     proc_pagetable(struct proc *);
 void            proc_freepagetable(pagetable_t, uint64);
-int             kill(int);
+int             kill(int, int);
 struct cpu*     mycpu(void);
 struct cpu*     getmycpu(void);
 struct proc*    myproc();
