@@ -48,7 +48,16 @@ struct dirent {
     struct dirent *next;
     struct dirent *prev;
     struct sleeplock    lock;
+
+    struct dirent_functions *e_func;
 };
+
+struct dirent_functions {  
+    // void (*epopulate)(struct dirent*);                   // fill in dirent details
+    // void (*eupdate)(struct dirent*);                     // write dirent details back to disk
+    int (*eread)(struct dirent*, int, uint64, uint, uint);     // read from file contents
+    // int (*ewrite)(struct dirent*, int, uint64, uint, uint);    // write to file contents
+}; 
 
 int             fat32_init(void);
 struct dirent*  dirlookup(struct dirent *entry, char *filename, uint *poff);
@@ -68,5 +77,11 @@ struct dirent*  ename(char *path);
 struct dirent*  enameparent(char *path, char *name);
 int             eread(struct dirent *entry, int user_dst, uint64 dst, uint off, uint n);
 int             ewrite(struct dirent *entry, int user_src, uint64 src, uint off, uint n);
+
+int             procfs_eread(struct dirent*, int, uint64, uint, uint);
+
+void            linkproc(void);
+struct dirent*  ealloc_inmemory(struct dirent *dp, char *name, int attr);
+struct dirent*  deget(struct dirent *parent, char *name);
 
 #endif

@@ -114,4 +114,8 @@ void            procdump(void);
 uint64          procnum(void);
 void            test_proc_init(int);
 
+void            proc_read(int,char*);
+int             getPids(int*);
+int             checkPid(int);
+
 #endif
