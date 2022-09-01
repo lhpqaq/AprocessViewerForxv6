@@ -24,6 +24,11 @@ main(void)
   for(;;){
     printf("init: starting sh\n");
     pid = fork();
+    char *proc = "/proc";
+    if(mkdir(proc)<0)
+    {
+      printf("mkdir /proc failed\n");
+    }
     if(pid < 0){
       printf("init: fork failed\n");
       exit(1);
