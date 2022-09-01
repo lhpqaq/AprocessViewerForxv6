@@ -403,9 +403,9 @@ fork(void)
 
   np->state = RUNNABLE;
 
-  acquire(&tickslock);
-  np->starttime = ticks;
-  release(&tickslock);
+  //acquire(&tickslock);
+  np->starttime = retime();
+  //release(&tickslock);
 
   release(&np->lock);
 
@@ -687,9 +687,9 @@ forkret(void)
 
   myproc()->u2stime = retime();
 
-  acquire(&tickslock);
+  /*acquire(&tickslock);
   myproc()->u2stime = ticks;
-  release(&tickslock);
+  release(&tickslock);*/
 
   usertrapret();
 }
