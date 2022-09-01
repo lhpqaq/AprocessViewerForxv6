@@ -2,7 +2,7 @@
 #include "kernel/include/stat.h"
 #include "kernel/include/fcntl.h"
 #include "kernel/include/signal.h"
-
+#include "kernel/include/ps.h"
 struct stat;
 struct rtcdate;
 struct sysinfo;
@@ -64,3 +64,8 @@ long times(struct tms*);
 int alarm(int second);
 void pause();
 void (*signal(int sig, void (*func)(int)))(int);
+int procps(struct procinfo*);
+
+char* strncpy(char*, const char*, int);
+int strncmp(const char*, const char*, uint);
+void itoa(uint n, char *s);

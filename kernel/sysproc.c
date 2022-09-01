@@ -12,6 +12,7 @@
 #include "include/printf.h"
 #include "include/vm.h"
 #include "include/signal.h"
+#include "include/vm.h"
 
 extern int exec(char *path, char **argv);
 extern struct proc proc[NPROC];
@@ -230,4 +231,24 @@ sys_signal(void){
   }
   myproc()->sigaction.sig_type=sigType;
   return 0;
+}
+
+
+uint64 sys_procps(void)
+{
+  uint64 addr;
+  if(argaddr(0, &addr) < 0)
+    return -1;
+  int pids[NPROC];
+  struct procinfo pinfo[NPROC];
+  int i;
+  uint64 len = 0;
+  int cnt = getPids(pids);
+  for(i = 0; i < cnt; i++)
+  {
+    proc_ps(pids[i],&pinfo[i]);
+    len += sizeof(pinfo[i]);
+  }
+  copyout2(addr,(char*)pinfo,len);
+  return cnt;
 }

@@ -62,6 +62,9 @@ usertrap(void)
   w_stvec((uint64)kernelvec);
 
   uint64 nowtime = retime();
+/*  acquire(&tickslock);
+  uint64 temp = ticks;
+  release(&tickslock);*/
   struct proc *p = myproc();
   // 进入内核态的时间
   //p->u2stime = nowtime;

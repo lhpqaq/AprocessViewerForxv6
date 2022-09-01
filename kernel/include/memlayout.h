@@ -54,6 +54,8 @@
 #define CLINT                   0x02000000L
 #define CLINT_V                 (CLINT + VIRT_OFFSET)
 
+#define CLINT_MTIME             (CLINT_V + 0xBFF8)
+
 #define PLIC                    0x0c000000L
 #define PLIC_V                  (PLIC + VIRT_OFFSET)
 

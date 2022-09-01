@@ -16,4 +16,12 @@
 #define MAXPATH      260   // maximum file path name
 #define INTERVAL     (390000000 / 200) // timer interrupt interval
 
+#ifndef QEMU
+#define CLK_FREQ 		6500000
+#else
+#define CLK_FREQ 		12500000
+#endif
+
+#define CLK_INTER_FREQ	10
+
 #endif

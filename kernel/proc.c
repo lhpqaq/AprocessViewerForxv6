@@ -212,6 +212,13 @@ freeproc(struct proc *p)
   p->killed = 0;
   p->xstate = 0;
   p->state = UNUSED;
+
+  p->times.utime=0;
+  p->times.stime=0;
+  p->times.cutime=0;
+  p->times.cstime=0;
+  p->starttime = 0;
+
 }
 
 // Create a user page table for a given process,
@@ -395,6 +402,10 @@ fork(void)
   pid = np->pid;
 
   np->state = RUNNABLE;
+
+  acquire(&tickslock);
+  np->starttime = ticks;
+  release(&tickslock);
 
   release(&np->lock);
 
@@ -628,6 +639,11 @@ sched(void)
   {
     p->times.stime += (retime() - p->us2ustime);
   }*/
+
+/*  acquire(&tickslock);
+  uint temp = ticks;
+  release(&tickslock);*/
+
   intena = mycpu()->intena;
   swtch(&p->context, &mycpu()->context);
   mycpu()->intena = intena;
@@ -670,6 +686,11 @@ forkret(void)
   }
 
   myproc()->u2stime = retime();
+
+  acquire(&tickslock);
+  myproc()->u2stime = ticks;
+  release(&tickslock);
+
   usertrapret();
 }
 
@@ -856,7 +877,7 @@ void procint(void)
 
 void proc_read(int pid, char* s)
 {
-/*  struct proc *p;
+  struct proc *p;
   for(p = proc; p < &proc[NPROC]; p++) {
     if(pid == p->pid)
     {
@@ -887,21 +908,21 @@ void proc_read(int pid, char* s)
   itoa(p->parent->pid,tmp);
   strcat(s,tmp);
   strcat(s,"\t");
-  itoa(p->proc_tms.utime,tmp);
+  itoa(p->times.utime,tmp);
   strcat(s,tmp);
   strcat(s,"\t");
-  itoa(p->proc_tms.stime,tmp);
+  itoa(p->times.stime,tmp);
   strcat(s,tmp);
   strcat(s,"\t");
-  itoa(p->proc_tms.cutime,tmp);
+  itoa(p->times.cutime,tmp);
   strcat(s,tmp);
   strcat(s,"\t");
-  itoa(p->proc_tms.cstime,tmp);
+  itoa(p->times.cstime,tmp);
   strcat(s,tmp);
   strcat(s,"\t");
   itoa(p->sz,tmp);
   strcat(s,tmp);
-  strcat(s,"\n");*/
+  strcat(s,"\n");
 }
 
 int getPids(int* pids)
@@ -930,3 +951,32 @@ int checkPid(int pid)
   return 0;
 }
 
+void proc_ps(int pid, struct procinfo* pi)
+{
+  struct proc *p;
+  for(p = proc; p < &proc[NPROC]; p++) {
+    if(pid == p->pid)
+    {
+      break;
+    }
+  }
+  pi->pid = p->pid;
+  pi->ppid = p->parent->pid;
+  if(p->pid == 1)
+    pi->ppid = 0;
+  pi->command[0] = '\0';
+  strcat(pi->command, p->name);
+  if(p->state == SLEEPING)
+  {
+    pi->state = 'S';
+  }
+  else
+  {
+    pi->state = 'R';
+  }
+  pi->times = p->times.stime + p->times.utime;
+  acquire(&tickslock);
+  pi->etime = ticks - p->starttime;
+  release(&tickslock);
+  pi->vsz = p->sz;
+}

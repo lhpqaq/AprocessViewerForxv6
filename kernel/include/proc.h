@@ -9,7 +9,7 @@
 #include "fat32.h"
 #include "trap.h"
 #include "signal.h"
-
+#include "ps.h"
 // Saved registers for kernel context switches.
 struct context {
   uint64 ra;
@@ -79,6 +79,8 @@ struct proc {
 /*  int curspace;           //1 用户态，2内核态
   uint64 us2ustime;*/
   
+  uint64 starttime;
+
   int signal;   //信号类型
   uint64 alarm_flag;    //当前进程是否调用了alarm的标志
   uint64 alarm_tick;    //当前alarm信号标记后运行了多少个tick
@@ -117,5 +119,6 @@ void            test_proc_init(int);
 void            proc_read(int,char*);
 int             getPids(int*);
 int             checkPid(int);
+void            proc_ps(int, struct procinfo*);
 
 #endif

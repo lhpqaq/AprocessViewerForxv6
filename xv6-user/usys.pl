@@ -48,3 +48,4 @@ entry("times");
 entry("alarm");
 entry("pause");
 entry("signal");
+entry("procps");
