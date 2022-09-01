@@ -89,6 +89,7 @@ struct proc {
   struct sigaction sigaction;         //信号类型
 
 };
+extern struct proc proc[NPROC];
 
 void            reg_info(void);
 int             cpuid(void);

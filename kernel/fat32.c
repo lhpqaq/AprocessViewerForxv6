@@ -71,7 +71,6 @@ static struct dirent root;
 
 struct dirent_functions fs_e_func = { eread };      
 struct dirent_functions procfs_e_func = { procfs_eread };
-
 /**
  * Read the Boot Parameter Block.
  * @return  0       if success
@@ -1014,13 +1013,24 @@ struct dirent *enameparent(char *path, char *name)
     return lookup_path(path, 1, name);
 }
 
-void linkproc(){
-  struct dirent *ep = ename("/proc");
-  if(ep){
+void linkproc()
+{
+    //printf("linkproc\n");
+    struct dirent* ep = ename("/proc");
     elock(ep);
     ep->e_func = &procfs_e_func;
+    struct proc* p;
+    struct dirent* tep;
+    char pdir[20];
+    for (p = proc; p < &proc[NPROC]; p++) {
+        itoa(p->pid, pdir);
+        if (p->state != UNUSED) {
+            tep = ealloc_inmemory(ep, pdir, ATTR_DIRECTORY);    //pid dir
+            ealloc_inmemory(tep, "stat", ATTR_ARCHIVE);         // stat
+
+        }
+    }
     eunlock(ep);
-  }
 }
 
 struct dirent *ealloc_inmemory(struct dirent *dp, char *name, int attr)
