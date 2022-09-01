@@ -631,6 +631,7 @@ sched(void)
 
   // 
   p->times.stime += (retime() - p->u2stime);
+  //printf("p->times.stime=%d\n",p->times.stime);
 /*  if(p->curspace==2)
   {
     p->times.stime += (retime() - p->u2stime);
@@ -974,9 +975,12 @@ void proc_ps(int pid, struct procinfo* pi)
   {
     pi->state = 'R';
   }
+  uint64 maxt = p->u2stime;
+  if(p->s2utime>maxt)
+    maxt = p->s2utime;
   pi->times = p->times.stime + p->times.utime;
-  acquire(&tickslock);
-  pi->etime = ticks - p->starttime;
-  release(&tickslock);
+  //acquire(&tickslock);
+  pi->etime = retime() - p->starttime;
+  //release(&tickslock);
   pi->vsz = p->sz;
 }

@@ -70,7 +70,7 @@ int parse_arg(char *arg)
 void format_time(char* times, uint64 ticks)
 {
 	if(ticks)
-		ticks /= CLK_INTER_FREQ;
+		ticks /= CLK_FREQ;
 	int hh,mm,ss;
 	char tmp[3];
 	ss = ticks % 60;
@@ -196,12 +196,20 @@ int main(int argc, char *argv[])
 	int cnt = 0;
 	if((cnt = procps(pi)) > 0)
 	{
+		//printf("\ncnt=%d\n\n",cnt);
 		print_hint(flag);
 		int i;
+		//printf("\ncnt=%d\n\n",cnt);
 		for(i = 0; i < cnt; i++)
-		{
+		{			
+			//printf("\ncnt=%d\n\n",cnt);
+			//printf("\ni=%d\n\n",i);
+			//printf("------------\n");
 			print_res(&pi[i],flag);
+
+			//printf("-----------------------------");
 		}
+		//printf("-------------end----------------");
 	}
 	exit(0);
 }
