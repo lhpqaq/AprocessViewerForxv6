@@ -1013,9 +1013,8 @@ struct dirent *enameparent(char *path, char *name)
     return lookup_path(path, 1, name);
 }
 
-void linkproc()
+void createproc()
 {
-    //printf("linkproc\n");
     struct dirent* ep = ename("/proc");
     elock(ep);
     ep->e_func = &procfs_e_func;
@@ -1027,7 +1026,6 @@ void linkproc()
         if (p->state != UNUSED) {
             tep = ealloc_inmemory(ep, pdir, ATTR_DIRECTORY);    //pid dir
             ealloc_inmemory(tep, "stat", ATTR_ARCHIVE);         // stat
-
         }
     }
     eunlock(ep);

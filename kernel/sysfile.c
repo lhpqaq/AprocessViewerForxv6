@@ -225,8 +225,7 @@ sys_mkdir(void)
   if (strncmp(proc, path, 5) == 0 || strncmp(proc1, path, 4)==0) {
       eunlock(ep);
       eput(ep);
-      //printf("mkdir success\n");
-      linkproc();
+      createproc(); //创建进程信息
       return 0;
   }
   eunlock(ep);

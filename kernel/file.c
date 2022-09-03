@@ -205,11 +205,6 @@ dirnext(struct file *f, uint64 addr)
       int i = 0;
       for(i = 0; i < cnt; i++)
       {
-        // char dirname[32];
-        // struct dirent *tmp;
-        // itoa(pids[i],dirname);
-        // tmp = ealloc_inmemory(f->ep,dirname,ATTR_DIRECTORY);
-        // ealloc_inmemory(tmp,"stat",ATTR_ARCHIVE);
         printf("%d\t\t\t\t DIR \t0\n",pids[i]);
       }
     }

@@ -79,6 +79,7 @@ struct proc {
 /*  int curspace;           //1 用户态，2内核态
   uint64 us2ustime;*/
   
+  //proc.h -> struct proc
   uint64 starttime;
 
   int signal;   //信号类型

@@ -80,7 +80,7 @@ int             ewrite(struct dirent *entry, int user_src, uint64 src, uint off,
 
 int             procfs_eread(struct dirent*, int, uint64, uint, uint);
 
-void            linkproc(void);
+void            createproc(void);
 struct dirent*  ealloc_inmemory(struct dirent *dp, char *name, int attr);
 struct dirent*  deget(struct dirent *parent, char *name);
 

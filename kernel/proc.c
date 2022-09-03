@@ -403,9 +403,8 @@ fork(void)
 
   np->state = RUNNABLE;
 
-  //acquire(&tickslock);
+  //proc.c->forc
   np->starttime = retime();
-  //release(&tickslock);
 
   release(&np->lock);
 
@@ -631,19 +630,6 @@ sched(void)
 
   // 
   p->times.stime += (retime() - p->u2stime);
-  //printf("p->times.stime=%d\n",p->times.stime);
-/*  if(p->curspace==2)
-  {
-    p->times.stime += (retime() - p->u2stime);
-  }
-  else
-  {
-    p->times.stime += (retime() - p->us2ustime);
-  }*/
-
-/*  acquire(&tickslock);
-  uint temp = ticks;
-  release(&tickslock);*/
 
   intena = mycpu()->intena;
   swtch(&p->context, &mycpu()->context);
