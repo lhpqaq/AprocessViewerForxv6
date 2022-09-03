@@ -134,3 +134,388 @@
 
 > 2022-06-23
 
+
+
+
+
+## 任务3：实现虚拟文件系统 `/proc`
+
+> 2022-08-26
+
+阅读任务三描述：
+
+在 Linux 中，`/proc` 目录下有一系列不需要存储在磁盘上的文件，这些 ”虚拟“ 文件描述了系统的状态、配置以及进程等等。事实上，`/proc` 目录也确实不在磁盘存储，而是在每次被读取时动态生成其中内容。
+
+在这项任务中，我们将基于 xv6 实现 `/proc` 文件系统。
+
+### 虚拟目录列表
+
+利用  `mkdir` 创建目录 `/proc` ，当执行 `ls /proc` 时，将会出现一系列虚拟目录（并不真正存储在磁盘上）。每一个正在运行的进程都拥有自己的目录。
+
+在 xv6 中，一个文件即为一个 `inode` ，`inode` 中含有读写文件内容以及构成 `inode` 数据的函数。这些 `inode` 函数将会调用硬件接口，但事实上`/proc` 在磁盘上并不存在。
+
+所以我们需要修改文件系统相关的代码。更具体地说，现在 `struct inode`  中包含一个叫做 `struct inode_functions` 的指针，其中包含指向读写 `inode` 的函数指针。这里将提供一个 `/proc` inode 的实现。
+
+```c
+struct inode_functions {
+  void (*ipopulate)(struct inode*);                   // fill in inode details
+  void (*iupdate)(struct inode*);                     // write inode details back to disk
+  int (*readi)(struct inode*, char*, uint, uint);     // read from file contents
+  int (*writei)(struct inode*, char*, uint, uint);    // write to file contents
+};
+
+struct inode {
+  /// ... other fields ...
+  struct inode_functions *i_func; // NEW!
+};
+```
+
+首先修改 inode 中 的 `i_func` 指针，以便读取 `/proc` 时函数能够被调用。从 `ls.c` 可以观察到如何获取目录列表，然后便可以写一个 `procfs_readi` 函数。`namei` 函数根据给定的文件路径（利用参数进行传递）返回对应的 `struct inode*` 。
+
+需要确保 `ls /proc` 显示正确的文件类型和大小。因此需要实现 `procfs_ipopulate` ，注意此处的`iget()` ：对于 “proc” 文件使用不同的设备号来避免重复获取错误的 inode。
+
+> 2022-08-27
+
+查阅关于虚拟文件系统的资料，阅读理解xv6文件系统的代码。
+
+> 2022-08-31
+
+追溯mkdir的流程，定位到sys_mkdir，添加新建/proc时的处理的，既`createproc()`函数
+
+```C
+uint64
+sys_mkdir(void)
+{
+  char path[FAT32_MAX_PATH];
+  struct dirent *ep;
+  char* proc = "/proc";
+  char* proc1 = "proc";
+  if(argstr(0, path, FAT32_MAX_PATH) < 0 || (ep = create(path, T_DIR, 0)) == 0)
+  {
+    return -1;
+  }
+  if (strncmp(proc, path, 5) == 0 || strncmp(proc1, path, 4)==0) 
+  {
+      eunlock(ep);
+      eput(ep);
+      createproc(); //创建进程信息
+      return 0;
+  }
+  eunlock(ep);
+  eput(ep);
+  return 0;
+}
+```
+
+添加`createproc()`函数：
+
+```C
+void createproc()
+{
+    struct dirent* ep = ename("/proc");
+    elock(ep);
+    ep->e_func = &procfs_e_func;
+    struct proc* p;
+    struct dirent* tep;
+    char pdir[20];
+    for (p = proc; p < &proc[NPROC]; p++) 
+    {
+        itoa(p->pid, pdir);
+        if (p->state != UNUSED) 
+        {
+            tep = ealloc_inmemory(ep, pdir, ATTR_DIRECTORY);    //pid dir
+            ealloc_inmemory(tep, "stat", ATTR_ARCHIVE);         // stat
+        }
+    }
+    eunlock(ep);
+}
+```
+
+添加` ealloc_inmemory`函数，既在内存上分配进程信息文件：
+
+```C
+struct dirent *ealloc_inmemory(struct dirent *dp, char *name, int attr)
+{
+    if (!(dp->attribute & ATTR_DIRECTORY)) 
+    {
+        panic("ealloc not dir");
+    }
+    if (dp->valid != 1 || !(name = formatname(name))) 
+    { 
+        return NULL;
+    }
+    struct dirent *ep;
+    uint off = 0;
+    if ((ep = dirlookup(dp, name, &off)) != 0) 
+    {   
+        return ep;
+    }
+    ep = eget(dp, name);
+    elock(ep);
+    ep->attribute = attr;
+    ep->file_size = 0;
+    ep->first_clus = 0;
+    ep->parent = edup(dp);
+    ep->off = off;
+    ep->clus_cnt = 0;
+    ep->cur_clus = 0;
+    ep->dirty = 0;
+    strncpy(ep->filename, name, FAT32_MAX_FILENAME);
+    ep->filename[FAT32_MAX_FILENAME] = '\0';
+    if (attr == ATTR_DIRECTORY) 
+    {   
+        ep->attribute |= ATTR_DIRECTORY;
+    } 
+    else 
+    {
+        ep->attribute |= ATTR_ARCHIVE;
+    }
+    ep->valid = 1;
+    eunlock(ep);
+    return ep;
+}
+```
+
+> 2022-08-31
+
+#### ls /proc
+
+修改dirnext函数，在执行ls /proc或ls /proc/[pid]时，实时打印出当前的进程信息
+
+```C
+int dirnext(struct file *f, uint64 addr)
+{
+  if(f->readable == 0 || !(f->ep->attribute & ATTR_DIRECTORY))
+    return -1;
+  struct dirent de;
+  struct stat st;
+  int count = 0;
+  int ret;
+  elock(f->ep);
+  while ((ret = enext(f->ep, &de, f->off, &count)) == 0) {  // skip empty entry
+    f->off += count * 32;
+  }
+  eunlock(f->ep);
+  if (ret != -1)
+  {
+    f->off += count * 32;
+    estat(&de, &st);
+  }
+  else
+  {
+    if(strncmp(f->ep->filename, "proc", 4) == 0 || strncmp(f->ep->parent->filename, "proc", 4) == 0)
+    {
+      struct dirent* en;
+      elock(f->ep);
+      if((en = procfs_enext(f->ep)) != NULL)
+      {
+        f->ep->child_index++;
+      }
+      else
+      {
+        f->ep->child_index = 0;
+        eunlock(f->ep);
+        return 0;
+      }
+      eunlock(f->ep);
+      estat(en,&st);
+    }
+    else
+    {
+      return 0;
+    }
+  }
+  if(copyout2(addr, (char *)&st, sizeof(st)) < 0)
+    return -1;
+  return 1;
+}
+```
+
+#### cat /proc
+
+在fat32.h中新增定义结构体dirent_function，并在结构体dirent中增加成员变量e_func，然后在file.c中修改系统中对eread的调用。
+
+fat32.c中在文件系统初始化或分配dirent时初始化dirent的e_func。使用 tmp->e_func = &procfs_e_func; 语句在为/proc目录下的子目录或文件分配dirent时重定向e_func。
+
+<img src="./figs/image-20220903231232160.png" alt="image-20220903231232160"  />
+
+在fat32.c中实现procfs_eread函数
+
+```C
+
+int procfs_eread(struct dirent *entry, int user_dst, uint64 dst, uint off, uint n)
+{
+    if (off > entry->file_size || off + n < off || (entry->attribute & ATTR_DIRECTORY)) {
+        return 0;
+    }
+    int pid = 0;
+    int len = 0;
+    pid = atoi(entry->parent->filename);
+    if(pid > 0)
+    {
+        char buf[512];
+        proc_read(pid,buf);
+        len = strlen(buf);
+        either_copyout(user_dst,dst,buf,len);
+    }
+    return len;
+}
+```
+
+在proc.c中实现辅助函数proc_read，获取到所读取的进程的信息，处理成特定的字符串，作为stat的内容
+
+```C
+void proc_read(int pid, char* s)
+{
+  struct proc *p;
+  for(p = proc; p < &proc[NPROC]; p++) {
+    if(pid == p->pid)
+    {
+      break;
+    }
+  }
+  s[0] = '\0';
+  strcat(s,"pid\tcommand\t\tstate\t\tppid\tutime\tstime\tcutime\tcstime\tvsz\n");
+  char tmp[128];
+  itoa(p->pid,tmp);
+  strcat(s,tmp);
+  strcat(s,"\t");
+  strcat(s,p->name);
+  strcat(s,"\t\t");
+  if(p->state == UNUSED)
+  {
+    strcat(s,"UNUSED\t\t");
+  }
+  else if(p->state == SLEEPING)
+  {
+    strcat(s,"SLEEPING\t");
+  }
+  else if(p->state == RUNNABLE)
+  {
+    strcat(s,"RUNNABLE\t");
+  }
+  else if(p->state == RUNNING)
+  {
+    strcat(s,"RUNNING \t");
+  }
+  else
+  {
+    strcat(s,"ZOMBIE\t\t");
+  }
+  if(p->pid == 1)
+    p->parent->pid = 0;
+  itoa(p->parent->pid,tmp);
+  strcat(s,tmp);
+  strcat(s,"\t");
+  itoa(p->times.utime,tmp);
+  strcat(s,tmp);
+  strcat(s,"\t");
+  itoa(p->times.stime,tmp);
+  strcat(s,tmp);
+  strcat(s,"\t");
+  itoa(p->times.cutime,tmp);
+  strcat(s,tmp);
+  strcat(s,"\t");
+  itoa(p->times.cstime,tmp);
+  strcat(s,tmp);
+  strcat(s,"\t");
+  itoa(p->sz,tmp);
+  strcat(s,tmp);
+  strcat(s,"\n");
+}
+```
+
+## 任务4：实现 `ps` 命令
+
+通过增加系统调用，返回ps命令执行时系统中正在运行的进程信息。
+
+> 2022-09-01
+
+在进程控制结构体中增加成员变量starttime，用于记录进程被创建并开始运行的系统时间
+
+<img src="figs/image-20220903231829243.png" alt="image-20220903231829243" style="zoom: 80%;" />
+
+进程被创建时，记录当前时间
+
+<img src="figs/image-20220903231852071.png" alt="image-20220903231852071" style="zoom:80%;" />
+
+调用ps时，计算当前运行的时间
+
+<img src="figs/image-20220903231907666.png" alt="image-20220903231907666" style="zoom:80%;" />
+
+实现proc_ps用于读取指定pid的进程的信息到procinfo结构体
+
+```C
+void proc_ps(int pid, struct procinfo* pi)
+{
+  struct proc *p;
+  for(p = proc; p < &proc[NPROC]; p++) 
+  {
+    if(pid == p->pid)
+    {
+      break;
+    }
+  }
+  pi->pid = p->pid;
+  pi->ppid = p->parent->pid;
+  if(p->pid == 1)
+    pi->ppid = 0;
+  pi->command[0] = '\0';
+  strcat(pi->command, p->name);
+  if(p->state == SLEEPING)
+  {
+    pi->state = 'S';
+  }
+  else
+  {
+    pi->state = 'R';
+  }
+  uint64 maxt = p->u2stime;
+  if(p->s2utime>maxt)
+    maxt = p->s2utime;
+  pi->times = p->times.stime + p->times.utime;
+  pi->etime = retime() - p->starttime;
+  pi->vsz = p->sz;
+}
+```
+
+在sysproc.c文件中，实现sys_procps函数系统调用，把procinfo中的信息给用户态
+
+```C
+uint64 sys_procps(void)
+{
+  uint64 addr;
+  if(argaddr(0, &addr) < 0)
+    return -1;
+  int pids[NPROC];
+  struct procinfo pinfo[NPROC];
+  int i;
+  uint64 len = 0;
+  int cnt = getPids(pids);
+  for(i = 0; i < cnt; i++)
+  {
+    proc_ps(pids[i],&pinfo[i]);
+    len += sizeof(pinfo[i]);
+  }
+  copyout2(addr,(char*)pinfo,len);
+  return cnt;
+}
+```
+
+在xv6_user目录下新建ps.c，用print_usage函数打印ps命令的用法提示信息
+
+使用set_flag解析输入的命令行参数设置标记位，如果检测到参数有误，直接打印出错误参数提示信息并退出程序
+
+实现parse_arg函数解析命令行参数
+
+> 2022-09-01 下午
+
+基本完成所有任务，开始做PPT
+
+> 2022-09-02
+
+#### Bonus：自动创建 /proc 目录并挂载 proc
+
+Xv6执行的第一个进程为init，在init中添加创建mkdir的命令，即可实现自动挂载
+
+<img src="figs/image-20220903232517649.png" alt="image-20220903232517649" style="zoom:80%;" />
