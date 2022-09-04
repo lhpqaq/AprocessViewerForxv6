@@ -2,6 +2,10 @@
 
 小组成员：刘昊鹏 陈旭 王江涛
 
+[TOC]
+
+
+
 ## 任务0：前导
 
 > 2022-06-22
@@ -37,96 +41,97 @@
 
   
   
-  ## 任务1：实现进程相关的系统调用
+
+## 任务1：实现进程相关的系统调用
+
+> 2022-06-22 上午
+
+阅读代码和xv6的相关资料
+
+1. xv6 手册: https://pdos.csail.mit.edu/6.828/2018/xv6/book-rev11.pdf ，以及其中文译本： https://th0ar.gitbooks.io/xv6-chinese/content/
+2. build a OS（关于 xv6 的笔记）：https://xiayingp.gitbook.io/build_a_os/
+
+搜索在xv6中添加新的系统调用的方法
+
+#### 系统调用 #1：getppid
+
+>  2022-06-22 下午
+
+- xv6-user
+
+  - 在user.h中，添加新系统调用封装后的函数声明。
+
+    - ```c
+      int getppid(void);
+      ```
+
+  - 在usys.pl添加：
+
+    - ```perl
+      entry("getppid");
+      ```
+
+- kernel
+
+  - 在sysnum.h中，添加新系统调用号：
+
+    - ```c
+      #define SYS_getppid     27
+      ```
+
+  - 在syscall.c中，添加功能函数的声明，并更新系统调用表：
+
+    - ```c
+      extern uint64 sys_getppid(void);
+      
+      static uint64 (*syscalls[])(void) = {
+          ......
+          [SYS_getppid]    sys_getppid,
+      };
+      
+      static char *sysnames[] = {
+          ......
+          [SYS_getppid]     "getppid",
+      };
+      ```
   
-  > 2022-06-22 上午
-  
-  阅读代码和xv6的相关资料
-  
-  1. xv6 手册: https://pdos.csail.mit.edu/6.828/2018/xv6/book-rev11.pdf ，以及其中文译本： https://th0ar.gitbooks.io/xv6-chinese/content/
-  2. build a OS（关于 xv6 的笔记）：https://xiayingp.gitbook.io/build_a_os/
-  
-  搜索在xv6中添加新的系统调用的方法
-  
-  >  2022-06-22 下午
-  
-  - 在xv6-user目录下
-  
-    - 在user.h文件中，添加新系统调用封装后的函数声明，假设其函数名为`getppid`。
-  
-      - ```c
-        int getppid(void);
-        ```
-  
-    - 在usys.pl文件末尾，添加如下行：
-  
-      - ```perl
-        entry("getppid");
-        ```
-  
-  - 在kernel目录下
-  
-    - 在include/sysnum.h文件中，添加新系统调用号的宏定义：
-  
-      - ```c
-        #define SYS_getppid     27
-        ```
-  
-      - 其中，27为新的合法系统调用号
-  
-    - 在syscall.c文件中，添加功能函数的声明，并更新系统调用表：
-  
-      - ```c
-        extern uint64 sys_getppid(void);
-        
-        static uint64 (*syscalls[])(void) = {
-            ......
-            [SYS_getppid]    sys_getppid,
-        };
-        
-        static char *sysnames[] = {
-            ......
-            [SYS_getppid]     "getppid",
-        };
-        ```
-  
-    - 在sysproc.c文件中，实现`sys_getppid`函数的功能如下：
-  
-      - ```c
-        uint64 sys_getppid(void)
-        {
-          return myproc()->parent->pid;
-        }
-        ```
-  
-  - 在xv6-user目录下
-  
-    - 创建getppid.c文件，编写系统调用`getppid`的测试函数`test_getppid`如下：
-  
-      ```c
-      int test_getppid()
+  - 在sysproc.c中，实现`sys_getppid`：
+
+    - ```c
+      uint64 sys_getppid(void)
       {
-          //TEST_START(__func__);
-          int pid = getppid();
-          //assert(pid >= 0);
-          printf("getppid success.\nppid = %d\n", pid);
-          //TEST_END(__func__);
-          return 0;
+        return myproc()->parent->pid;
       }
       ```
-    
-  - 在根目录下
   
-    - 在Makefile文件中加一行如下：
+- 在xv6-user目录下
+
+  - 创建getppid.c文件，编写系统调用`getppid`的测试函数`test_getppid`如下：
+
+    ```c
+    int test_getppid()
+    {
+        //TEST_START(__func__);
+        int pid = getppid();
+        //assert(pid >= 0);
+        printf("getppid success.\nppid = %d\n", pid);
+        //TEST_END(__func__);
+        return 0;
+    }
+    ```
   
-      ```makefile
-      UPROGS=\
-          $U/_init\
-          $U/_sh\
-          $U/_cat\
-          ...
-          $U/_getppid\
-      ```
+- 在根目录下
+
+  - 在Makefile文件中加一行如下：
+
+    ```makefile
+    UPROGS=\
+        $U/_init\
+        $U/_sh\
+        $U/_cat\
+        ...
+        $U/_getppid\
+    ```
 
 ​	运行结果
 
@@ -134,7 +139,65 @@
 
 > 2022-06-23
 
+#### 系统调用 #2：times 获取进程的用户和系统时间
 
+为每个进程维护一个tms结构体
+
+```C
+struct tms {
+    uint64 utime; // user time (in seconds)
+    uint64 stime; // system time
+    uint64 cutime; // user time of children
+    uint64 cstime; // system time of children
+};
+```
+
+在proc结构体中新增两个成员，分别表示进程上次从用户态转为内核态和从内核态转为用户态的时间
+
+```C
+  struct tms times;
+  uint64 u2stime;
+  uint64 s2utime;
+```
+
+封装一个函数，用于返回当前时间，可以选择使用r_time还是ticks
+
+```C
+uint64 retime()
+{
+    uint64 now;
+
+    if(WHATIME)
+    {
+        now = r_time();
+    }
+    else
+    {
+        acquire(&tickslock);
+        now = ticks;
+        release(&tickslock);
+    }
+    return now;
+}
+```
+
+> 2022-06-24
+
+在trap.c和proc.c等进程状态切换的位置，更新这些成员
+
+<img src="figs/image-20220904110637014.png" alt="image-20220904110637014" style="zoom:80%;" />
+
+<img src="figs/image-20220904110643665.png" alt="image-20220904110643665" style="zoom:80%;" />
+
+在进程回收前，更新其父进程的cstime和ustime成员
+
+<img src="figs/image-20220904110704691.png" alt="image-20220904110704691" style="zoom:80%;" />
+
+> 2022-06-25
+
+#### 系统调用 #3：getmem
+
+<img src="figs/image-20220904110737185.png" alt="image-20220904110737185" style="zoom:80%;" />
 
 ## 任务2：添加信号
 

@@ -1,6 +1,7 @@
 #include "kernel/include/types.h"
 #include "kernel/include/stat.h"
 #include "xv6-user/user.h"
+#include "kernel/include/param.h"
 
 int test_getppid()
 {
@@ -15,9 +16,19 @@ int test_getppid()
 void test_times()
 {
     struct tms t;
+    int i=0;
+    while(i<100000000)
+    {
+        int j=0;
+        while(j<100)
+        {
+            j++;
+        }
+        i++;
+    }
     long tt=times(&t);
-    printf("times:%l %l %l %l \n",t.utime,t.stime,t.cutime,t.cstime);
-    printf("return:%l\n",tt);
+    printf("times:%ds %ds %ds %ds \n",t.utime/CLK_FREQ,t.stime/CLK_FREQ,t.cutime/CLK_FREQ,t.cstime/CLK_FREQ);
+    printf("return:%ds\n",tt/CLK_FREQ);
 }
 
 int main(void) {
